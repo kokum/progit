@@ -525,19 +525,19 @@ Git属性を使えば、プロジェクトにある指定したファイルに�
 
 最後は、“merge”コマンドが成功した後に処理される、“post-merge”である。権限設定のされたデータなどにより、Gitが追跡できなかった作業用データの状態を復元するような場合に使う事が出来る。同様に、作業用データが変更されたときにコピーさせたりなど、Gitのコントロール下にないファイルを検証する事も出来る。
 
-### Server-Side Hooks ###
+### サーバーサイドフック処理 ###
 
-In addition to the client-side hooks, you can use a couple of important server-side hooks as a system administrator to enforce nearly any kind of policy for your project. These scripts run before and after pushes to the server. The pre hooks can exit non-zero at any time to reject the push as well as print an error message back to the client; you can set up a push policy that’s as complex as you wish.
+クライアントサイドのフック処理に加えて、プロジェクトに対して、ある種のポリシーに沿うように強制するようなシステム管理者として、いくつかの重要なサーバーサイドフック処理を使う事が出来ます。これらのスクリプトはサーバーへプッシュする前と後に処理されます。プッシュ前フック処理は、何らかのエラーがある場合には、クライアントへエラーメッセージを返すと同時にプッシュを拒否するように、処理を停止させる事が出来ます。あなたが望むような複雑なポリシーをプッシュするように設定できます。
 
-#### pre-receive and post-receive ####
+#### プッシュを受信する前と受信した後 ####
 
-The first script to run when handling a push from a client is `pre-receive`. It takes a list of references that are being pushed from stdin; if it exits non-zero, none of them are accepted. You can use this hook to do things like make sure none of the updated references are non-fast-forwards; or to check that the user doing the pushing has create, delete, or push access or access to push updates to all the files they’re modifying with the push.
+クライアントからプッシュ操作が行われたときに処理される最初のスクリプトは、“pre-receive”です。標準入力からプッシュされる参照のリストを受け取ります。もし、問題があれば、それらは、すべて、認められない。このフック処理は、更新されたfast-forwardではない参照がない事や、作成されたり、削除されたりしたファイルがプッシュされているかをチェックしたり、プッシュアクセス、プッシュで変更されたすべてのファイルを更新するプッシュへのアクセスを確認するような場合に利用することが出来ます。
 
-The `post-receive` hook runs after the entire process is completed and can be used to update other services or notify users. It takes the same stdin data as the `pre-receive` hook. Examples include e-mailing a list, notifying a continuous integration server, or updating a ticket-tracking system — you can even parse the commit messages to see if any tickets need to be opened, modified, or closed. This script can’t stop the push process, but the client doesn’t disconnect until it has completed; so, be careful when you try to do anything that may take a long time.
+“post-receive”フック処理は処理がすべて完了した後に実行されます。ユーザーに通知したり、他のサービスへ更新を行ったりする事に利用できます。“pre-receive”フック処理と同じように標準入力を受け取ります。たとえば、メールアドレスのリストを含めたり、併用しているサーバーへ通知したり、チケット管理システムを更新したり出来ます。チケットを開く、更新する、閉じるなど必要があれば、コミットメッセージをパースすることもできます。このスクリプトは、プッシュ処理を止める事が出来ません。しかし、クライアントは完了するまで接続を切る事もありません。そのため、処理が長時間になる場合には、注意する必要があります。
 
-#### update ####
+#### 更新 ####
 
-The update script is very similar to the `pre-receive` script, except that it’s run once for each branch the pusher is trying to update. If the pusher is trying to push to multiple branches, `pre-receive` runs only once, whereas update runs once per branch they’re pushing to. Instead of reading from stdin, this script takes three arguments: the name of the reference (branch), the SHA-1 that reference pointed to before the push, and the SHA-1 the user is trying to push. If the update script exits non-zero, only that reference is rejected; other references can still be updated.
+更新時のスクリプトは、更新しようとしているブランチそれぞれで処理されること以外は、“pre-receive”スクリプトとよく似ています。作業者が、複数のブランチへプッシュしようとしている場合、“pre-receive”は、一度だけ処理される一方、更新時スクリプトはプッシュしようとしているブランチ毎に一回ずつ処理されます。標準入力から読み込む代わりに、３つの引数を取ります。ブランチの名前、プッシュする前に参照を示すためのSHA-1、そして、作業者がプッシュしようとしているSHA-1です。更新時スクリプトに問題があった場合、その参照で拒否されるだけで、他の参照は、そのまま更新されます。
 
 ## An Example Git-Enforced Policy ##
 
